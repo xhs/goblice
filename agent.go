@@ -146,6 +146,11 @@ func (a *Agent) GenerateSdp() string {
 	defer C.free(unsafe.Pointer(s))
 	return C.GoString((*C.char)(s))
 }
+
+func (a *Agent) GenerateCandidateSdp(c *Candidate) string {
+	s := C.nice_agent_generate_local_candidate_sdp(a.agent, c.cand)
+	defer C.free(unsafe.Pointer(s))
+	return C.GoString((*C.char)(s))
 }
 
 func (a *Agent) ParseSdp(sdp string) (int, error) {
