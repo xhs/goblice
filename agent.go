@@ -141,10 +141,11 @@ func (a *Agent) Receive(stream, component, length int, buf *[]byte) (int, error)
 	return int(rv), nil
 }
 
-func (a *Agent) GenerateSdp() (string, error) {
+func (a *Agent) GenerateSdp() string {
 	s := C.nice_agent_generate_local_sdp(a.agent)
 	defer C.free(unsafe.Pointer(s))
-	return C.GoString((*C.char)(s)), nil
+	return C.GoString((*C.char)(s))
+}
 }
 
 func (a *Agent) ParseSdp(sdp string) (int, error) {
