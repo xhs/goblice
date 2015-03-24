@@ -74,27 +74,24 @@ func (a *Agent) Destroy() error {
 	return nil
 }
 
-func (a *Agent) SetControllingMode(controlling int) error {
+func (a *Agent) SetControllingMode(controlling int) {
 	s := C.CString("controlling-mode")
 	defer C.free(unsafe.Pointer(s))
 	C.g_object_set_int_wrap(C.gpointer(a.agent), s, C.int(controlling))
-	return nil
 }
 
-func (a *Agent) SetStunServer(ip string) error {
+func (a *Agent) SetStunServer(ip string) {
 	s := C.CString("stun-server")
 	defer C.free(unsafe.Pointer(s))
 	v := C.CString(ip)
 	defer C.free(unsafe.Pointer(v))
 	C.g_object_set_string_wrap(C.gpointer(a.agent), s, v)
-	return nil
 }
 
-func (a *Agent) SetStunServerPort(port int) error {
+func (a *Agent) SetStunServerPort(port int) {
 	s := C.CString("stun-server-port")
 	defer C.free(unsafe.Pointer(s))
 	C.g_object_set_int_wrap(C.gpointer(a.agent), s, C.int(port))
-	return nil
 }
 
 func (a *Agent) AddStream(components int) (int, error) {
