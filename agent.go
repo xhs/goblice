@@ -120,18 +120,18 @@ func (a *Agent) GatherCandidates(stream int) error {
 	return nil
 }
 
-func (a *Agent) Send(stream, component, length int, buf *[]byte) (int, error) {
+func (a *Agent) Send(stream, component int, buf []byte) (int, error) {
 	tv := C.nice_agent_send(a.agent, C.guint(stream), C.guint(component),
-		C.guint(length), (*C.gchar)(unsafe.Pointer(buf)))
+		C.guint(len(buf)), (*C.gchar)(unsafe.Pointer(&buf[0])))
 	if tv < 0 {
 		return 0, errors.New("failed to send data")
 	}
 	return int(tv), nil
 }
 
-func (a *Agent) Receive(stream, component, length int, buf *[]byte) (int, error) {
+func (a *Agent) Receive(stream, component int, buf []byte) (int, error) {
 	rv := C.nice_agent_recv(a.agent, C.guint(stream), C.guint(component),
-		(*C.guint8)(unsafe.Pointer(buf)), C.gsize(length), nil, nil)
+		(*C.guint8)(unsafe.Pointer(&buf[0])), C.gsize(len(buf)), nil, nil)
 	if rv < 0 {
 		return 0, errors.New("failed to receive data")
 	}
