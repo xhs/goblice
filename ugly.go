@@ -6,15 +6,15 @@ package goblice
 
 extern void go_candidate_gathering_done_cb(NiceAgent *agent, guint stream, gpointer udata);
 static void set_candidate_gathering_done_cb(NiceAgent *agent, gpointer udata) {
-    g_signal_connect(G_OBJECT(agent), "candidate-gathering-done",
-                     G_CALLBACK(go_candidate_gathering_done_cb), udata);
+  g_signal_connect(G_OBJECT(agent), "candidate-gathering-done",
+                   G_CALLBACK(go_candidate_gathering_done_cb), udata);
 }
 
 extern void go_component_state_changed_cb(NiceAgent *agent, guint stream,
                                           guint component, guint state, gpointer udata);
 static void set_component_state_changed_cb(NiceAgent *agent, gpointer udata) {
-    g_signal_connect(G_OBJECT(agent), "component-state-changed",
-                     G_CALLBACK(go_component_state_changed_cb), udata);
+  g_signal_connect(G_OBJECT(agent), "component-state-changed",
+                   G_CALLBACK(go_component_state_changed_cb), udata);
 }
 
 extern void go_new_candidate_cb(NiceAgent *agent, NiceCandidate *candidate, gpointer udata);
@@ -50,10 +50,9 @@ func go_candidate_gathering_done_cb(agent *C.NiceAgent, stream C.guint, udata un
 	d.cb.(CandidateGatheringDoneCB)(a, int(stream), d.data)
 }
 
-func (a *Agent) SetCandidateGatheringDoneCB(cb CandidateGatheringDoneCB, udata interface{}) error {
+func (a *Agent) SetCandidateGatheringDoneCB(cb CandidateGatheringDoneCB, udata interface{}) {
 	d := unsafe.Pointer(&callbackData{cb, udata})
 	C.set_candidate_gathering_done_cb(a.agent, C.gpointer(d))
-	return nil
 }
 
 type ComponentStateChangedCB func(a *Agent, stream, component, state int, udata interface{})
@@ -65,10 +64,9 @@ func go_component_state_changed_cb(agent *C.NiceAgent, stream, component, state 
 	d.cb.(ComponentStateChangedCB)(a, int(stream), int(component), int(state), d.data)
 }
 
-func (a *Agent) SetComponentStateChangedCB(cb ComponentStateChangedCB, udata interface{}) error {
+func (a *Agent) SetComponentStateChangedCB(cb ComponentStateChangedCB, udata interface{}) {
 	d := unsafe.Pointer(&callbackData{cb, udata})
 	C.set_component_state_changed_cb(a.agent, C.gpointer(d))
-	return nil
 }
 
 type NewCandidateCB func(a *Agent, c *Candidate, udata interface{})
@@ -81,10 +79,9 @@ func go_new_candidate_cb(agent *C.NiceAgent, candidate *C.NiceCandidate, udata u
 	d.cb.(NewCandidateCB)(a, c, d.data)
 }
 
-func (a *Agent) SetNewCandidateCB(cb NewCandidateCB, udata interface{}) error {
+func (a *Agent) SetNewCandidateCB(cb NewCandidateCB, udata interface{}) {
 	d := unsafe.Pointer(&callbackData{cb, udata})
 	C.set_new_candidate_cb(a.agent, C.gpointer(d))
-	return nil
 }
 
 type NewSelectedPairCB func(a *Agent, stream, component int, l, r *Candidate, udata interface{})
@@ -99,8 +96,7 @@ func go_new_selected_pair_cb(agent *C.NiceAgent, stream, component C.guint,
 	d.cb.(NewSelectedPairCB)(a, int(stream), int(component), l, r, d.data)
 }
 
-func (a *Agent) SetNewSelectedPairCB(cb NewSelectedPairCB, udata interface{}) error {
+func (a *Agent) SetNewSelectedPairCB(cb NewSelectedPairCB, udata interface{}) {
 	d := unsafe.Pointer(&callbackData{cb, udata})
 	C.set_new_selected_pair_cb(a.agent, C.gpointer(d))
-	return nil
 }
