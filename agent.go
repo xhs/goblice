@@ -74,10 +74,14 @@ func (a *Agent) Destroy() error {
 	return nil
 }
 
-func (a *Agent) SetControllingMode(controlling int) {
+func (a *Agent) SetControllingMode(controlling bool) {
 	s := C.CString("controlling-mode")
 	defer C.free(unsafe.Pointer(s))
-	C.g_object_set_int_wrap(C.gpointer(a.agent), s, C.int(controlling))
+	c := 1
+	if controlling == false {
+		c = 0
+	}
+	C.g_object_set_int_wrap(C.gpointer(a.agent), s, C.int(c))
 }
 
 func (a *Agent) SetStunServer(ip string) {
