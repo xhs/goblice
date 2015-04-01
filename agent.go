@@ -196,12 +196,6 @@ func (a *Agent) GenerateSdp() string {
 	return C.GoString((*C.char)(s))
 }
 
-func (a *Agent) GenerateCandidateSdp(c *Candidate) string {
-	s := C.nice_agent_generate_local_candidate_sdp(a.agent, c.cand)
-	defer C.free(unsafe.Pointer(s))
-	return C.GoString((*C.char)(s))
-}
-
 func (a *Agent) ParseSdp(sdp string) (int, error) {
 	s := C.CString(sdp)
 	defer C.free(unsafe.Pointer(s))
@@ -212,18 +206,15 @@ func (a *Agent) ParseSdp(sdp string) (int, error) {
 	return int(rv), nil
 }
 
-func (a *Agent) ParseCandidateSdp(sdp string) (*Candidate, error) {
+func (a *Agent) ParseCandidateSdp(sdp string) (int, error) {
 	s := C.CString(sdp)
 	defer C.free(unsafe.Pointer(s))
 	c := C.nice_agent_parse_remote_candidate_sdp(a.agent, C.guint(a.stream), (*C.gchar)(s))
 	if c == nil {
-		return nil, errors.New("invalid remote candidate sdp")
+		return 0, errors.New("invalid remote candidate sdp")
 	}
-	return &Candidate{c}, nil
-}
-
-func (a *Agent) AddRemoteCandidate(c *Candidate) (int, error) {
-	list := C.g_slist_append(nil, C.gpointer(c.cand))
+	
+	list := C.g_slist_append(nil, C.gpointer(c))
 	defer C.g_slist_free(list)
 	rv := C.nice_agent_set_remote_candidates(a.agent, C.guint(a.stream), 1, list)
 	if rv < 0 {
