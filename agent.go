@@ -22,6 +22,9 @@ static void attach_receive_db(NiceAgent *agent, guint stream_id, GMainLoop *loop
 
 extern void go_candidate_gathering_done_cb(NiceAgent *agent, guint stream, gpointer udata);
 
+extern void go_component_state_changed_cb(NiceAgent *agent, guint stream,
+                                          guint component, guint state, gpointer udata);
+
 extern void go_new_candidate_cb(NiceAgent *agent, NiceCandidate *candidate, gpointer udata);
 
 extern void go_new_selected_pair_cb(NiceAgent *agent, guint stream, guint component,
@@ -30,6 +33,8 @@ extern void go_new_selected_pair_cb(NiceAgent *agent, guint stream, guint compon
 static void set_callbacks(NiceAgent *agent, void *udata) {
 	g_signal_connect(G_OBJECT(agent), "candidate-gathering-done",
                    G_CALLBACK(go_candidate_gathering_done_cb), udata);
+  g_signal_connect(G_OBJECT(agent), "component-state-changed",
+                   G_CALLBACK(go_component_state_changed_cb), udata);
 	g_signal_connect(G_OBJECT(agent), "new-candidate-full",
                    G_CALLBACK(go_new_candidate_cb), udata);
   g_signal_connect(G_OBJECT(agent), "new-selected-pair-full",
@@ -44,16 +49,17 @@ import (
 )
 
 const (
-	EventGatheringDone = 0
+	EventGatheringDone   = 0
 	EventNegotiationDone = 1
+	EventStateChanged    = 2
 )
 
 type Agent struct {
-	agent *C.NiceAgent
-	loop  *C.GMainLoop
-	stream int
+	agent      *C.NiceAgent
+	loop       *C.GMainLoop
+	stream     int
 	DataToRead chan []byte
-	Events chan int
+	Events     chan int
 	Candidates chan string
 }
 
@@ -65,6 +71,12 @@ type Candidate struct {
 func go_candidate_gathering_done_cb(agent *C.NiceAgent, stream C.guint, udata unsafe.Pointer) {
 	a := (*Agent)(udata)
 	a.Events <- EventGatheringDone
+}
+
+//export go_component_state_changed_cb
+func go_component_state_changed_cb(agent *C.NiceAgent, stream, component, state C.guint, udata unsafe.Pointer) {
+	a := (*Agent)(udata)
+	a.Events <- EventStateChanged
 }
 
 //export go_new_candidate_cb
@@ -213,7 +225,7 @@ func (a *Agent) ParseCandidateSdp(sdp string) (int, error) {
 	if c == nil {
 		return 0, errors.New("invalid remote candidate sdp")
 	}
-	
+
 	list := C.g_slist_append(nil, C.gpointer(c))
 	defer C.g_slist_free(list)
 	rv := C.nice_agent_set_remote_candidates(a.agent, C.guint(a.stream), 1, list)
