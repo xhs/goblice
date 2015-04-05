@@ -39,10 +39,10 @@ func TestGenerateCandidates(t *testing.T) {
 		case <-delay:
 			log.Print("timeout")
 			break
-		case cand := <-agent.Candidates:
+		case cand := <-agent.CandidateChannel:
 			log.Print(cand)
 			continue
-		case e := <-agent.Events:
+		case e := <-agent.EventChannel:
 			log.Print(e)
 			continue
 		}
@@ -79,11 +79,11 @@ func TestIceNegotiation(t *testing.T) {
 	go func() {
 		for {
 			select {
-			case cand := <-client.Candidates:
+			case cand := <-client.CandidateChannel:
 				log.Print("client candidate:", cand)
 				server.ParseCandidateSdp(cand)
 				continue
-			case e := <-client.Events:
+			case e := <-client.EventChannel:
 				log.Print("client event", e)
 				if e == goblice.EventNegotiationDone {
 					log.Print("client negotiation done")
@@ -103,17 +103,17 @@ func TestIceNegotiation(t *testing.T) {
 
 	for {
 		select {
-		case cand := <-server.Candidates:
+		case cand := <-server.CandidateChannel:
 			log.Print("server candidate:", cand)
 			server.ParseCandidateSdp(cand)
 			continue
-		case e := <-server.Events:
+		case e := <-server.EventChannel:
 			log.Print("server event", e)
 			if e == goblice.EventNegotiationDone {
 				log.Print("server negotiation done")
 			}
 			continue
-		case d := <-server.DataToRead:
+		case d := <-server.DataChannel:
 			log.Print("server received:", d)
 			continue
 		case <-serverTimeout:

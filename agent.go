@@ -58,9 +58,9 @@ type Agent struct {
 	agent      *C.NiceAgent
 	loop       *C.GMainLoop
 	stream     int
-	DataToRead chan []byte
-	Events     chan int
-	Candidates chan string
+	DataChannel chan []byte
+	EventChannel     chan int
+	CandidateChannel chan string
 }
 
 type Candidate struct {
@@ -70,13 +70,13 @@ type Candidate struct {
 //export go_candidate_gathering_done_cb
 func go_candidate_gathering_done_cb(agent *C.NiceAgent, stream C.guint, udata unsafe.Pointer) {
 	a := (*Agent)(udata)
-	a.Events <- EventGatheringDone
+	a.EventChannel <- EventGatheringDone
 }
 
 //export go_component_state_changed_cb
 func go_component_state_changed_cb(agent *C.NiceAgent, stream, component, state C.guint, udata unsafe.Pointer) {
 	a := (*Agent)(udata)
-	a.Events <- EventStateChanged
+	a.EventChannel <- EventStateChanged
 }
 
 //export go_new_candidate_cb
@@ -85,14 +85,14 @@ func go_new_candidate_cb(agent *C.NiceAgent, candidate *C.NiceCandidate, udata u
 	defer C.free(unsafe.Pointer(s))
 	c := C.GoString((*C.char)(s))
 	a := (*Agent)(udata)
-	a.Candidates <- c
+	a.CandidateChannel <- c
 }
 
 //export go_new_selected_pair_cb
 func go_new_selected_pair_cb(agent *C.NiceAgent, stream, component C.guint,
 	lcand, rcand *C.NiceCandidate, udata unsafe.Pointer) {
 	a := (*Agent)(udata)
-	a.Events <- EventNegotiationDone
+	a.EventChannel <- EventNegotiationDone
 }
 
 //export go_data_received_cb
@@ -100,7 +100,7 @@ func go_data_received_cb(agent *C.NiceAgent, stream, component, length C.guint,
 	data *C.gchar, udata unsafe.Pointer) {
 	a := (*Agent)(udata)
 	b := C.GoBytes(unsafe.Pointer(data), C.int(length))
-	a.DataToRead <- b
+	a.DataChannel <- b
 }
 
 func NewAgent() (*Agent, error) {
@@ -150,9 +150,9 @@ func newAgent(reliable bool) (*Agent, error) {
 	}
 
 	a := &Agent{agent: agent, loop: loop, stream: int(stream)}
-	a.DataToRead = make(chan []byte, 16)
-	a.Events = make(chan int, 2)
-	a.Candidates = make(chan string, 16)
+	a.DataChannel = make(chan []byte, 16)
+	a.EventChannel = make(chan int, 2)
+	a.CandidateChannel = make(chan string, 16)
 	C.attach_receive_db(agent, stream, loop, unsafe.Pointer(a))
 	C.set_callbacks(agent, unsafe.Pointer(a))
 
