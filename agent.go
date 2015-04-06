@@ -46,6 +46,7 @@ import "C"
 import (
 	"errors"
 	"unsafe"
+	"sync"
 )
 
 const (
@@ -58,6 +59,7 @@ type Agent struct {
 	agent      *C.NiceAgent
 	loop       *C.GMainLoop
 	stream     int
+	mtx sync.Mutex
 	DataChannel chan []byte
 	EventChannel     chan int
 	CandidateChannel chan string
@@ -186,6 +188,9 @@ func (a *Agent) SetStunPort(port int) {
 }
 
 func (a *Agent) GatherCandidates() error {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
 	rv := int(C.nice_agent_gather_candidates(a.agent, C.guint(a.stream)))
 	if rv == 0 {
 		return errors.New("failed to gather candidates")
@@ -194,6 +199,9 @@ func (a *Agent) GatherCandidates() error {
 }
 
 func (a *Agent) Send(data []byte) (int, error) {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
 	tv := C.nice_agent_send(a.agent, C.guint(a.stream), 1,
 		C.guint(len(data)), (*C.gchar)(unsafe.Pointer(&data[0])))
 	if tv < 0 {
@@ -203,12 +211,18 @@ func (a *Agent) Send(data []byte) (int, error) {
 }
 
 func (a *Agent) GenerateSdp() string {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
 	s := C.nice_agent_generate_local_sdp(a.agent)
 	defer C.free(unsafe.Pointer(s))
 	return C.GoString((*C.char)(s))
 }
 
 func (a *Agent) ParseSdp(sdp string) (int, error) {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
 	s := C.CString(sdp)
 	defer C.free(unsafe.Pointer(s))
 	rv := C.nice_agent_parse_remote_sdp(a.agent, (*C.gchar)(s))
@@ -219,6 +233,9 @@ func (a *Agent) ParseSdp(sdp string) (int, error) {
 }
 
 func (a *Agent) ParseCandidateSdp(sdp string) (int, error) {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
 	s := C.CString(sdp)
 	defer C.free(unsafe.Pointer(s))
 	c := C.nice_agent_parse_remote_candidate_sdp(a.agent, C.guint(a.stream), (*C.gchar)(s))
