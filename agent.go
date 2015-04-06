@@ -153,7 +153,7 @@ func newAgent(reliable bool) (*Agent, error) {
 
 	a := &Agent{agent: agent, loop: loop, stream: int(stream)}
 	a.DataChannel = make(chan []byte, 16)
-	a.EventChannel = make(chan int, 2)
+	a.EventChannel = make(chan int, 16)
 	a.CandidateChannel = make(chan string, 16)
 	C.attach_receive_db(agent, stream, loop, unsafe.Pointer(a))
 	C.set_callbacks(agent, unsafe.Pointer(a))
