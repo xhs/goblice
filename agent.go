@@ -45,8 +45,8 @@ import "C"
 
 import (
 	"errors"
-	"unsafe"
 	"sync"
+	"unsafe"
 )
 
 const (
@@ -56,11 +56,11 @@ const (
 )
 
 type Agent struct {
-	agent      *C.NiceAgent
-	loop       *C.GMainLoop
-	stream     int
-	mtx sync.Mutex
-	DataChannel chan []byte
+	agent            *C.NiceAgent
+	loop             *C.GMainLoop
+	stream           int
+	mtx              sync.Mutex
+	DataChannel      chan []byte
 	EventChannel     chan int
 	CandidateChannel chan string
 }
